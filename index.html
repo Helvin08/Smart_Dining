@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>South Indian Smart Dining</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="desktop-warning">
+        <h2>Mobile Only</h2>
+        <p>This premium dining experience is designed exclusively for mobile devices. Please open on your smartphone or tablet.</p>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; width:90%; max-width:400px; pointer-events:none;"></div>
+
+    <div class="app-container">
+        <!-- 1. Splash Screen -->
+        <section id="splash-view" class="view active splash-bg">
+            <div class="splash-content">
+                <i class="ri-leaf-fill splash-icon"></i>
+                <h1 class="splash-title">Smart Dining</h1>
+                <p>Authentic South Indian Veg</p>
+                <div class="loader mt-20"></div>
+            </div>
+        </section>
+
+        <!-- 1.5. Login Screen -->
+        <section id="user-login-view" class="view">
+            <div class="entry-header mt-30">
+                <h2>Welcome!</h2>
+                <p>Login to continue</p>
+            </div>
+            <div style="padding: 20px;">
+                <div id="login-phone-step">
+                    <div style="display:flex; align-items:center; background:var(--card-bg); padding:5px 15px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:20px;">
+                        <span style="font-weight:600; color:var(--text-dark); margin-right:10px;">+91</span>
+                        <input type="tel" id="login-phone" placeholder="Enter Mobile Number" maxlength="10" style="border:none; padding:12px 0; font-family:'Outfit'; font-size:1.1rem; width:100%; outline:none; background:transparent;">
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="app.sendOTP()">Get OTP</button>
+                </div>
+                
+                <div id="login-otp-step" style="display:none; text-align:center;">
+                    <p class="text-muted mb-20" id="otp-sent-text">OTP sent to +91</p>
+                    <div style="display:flex; gap:10px; justify-content:center; margin-bottom:30px;">
+                        <input type="text" class="otp-input" maxlength="1" style="width:50px; height:60px; text-align:center; font-size:1.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:700;">
+                        <input type="text" class="otp-input" maxlength="1" style="width:50px; height:60px; text-align:center; font-size:1.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:700;">
+                        <input type="text" class="otp-input" maxlength="1" style="width:50px; height:60px; text-align:center; font-size:1.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:700;">
+                        <input type="text" class="otp-input" maxlength="1" style="width:50px; height:60px; text-align:center; font-size:1.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:700;">
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="app.verifyOTP()">Verify & Login</button>
+                    <p class="text-muted mt-20" style="font-size:0.9rem; cursor:pointer;" onclick="app.resetLogin()">Wrong number? Go back</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Entry Screen -->
+        <section id="entry-view" class="view">
+            <div style="display:flex; justify-content:flex-end; padding:10px; align-items:center;">
+                <a href="admin.html" style="color:var(--green-dark); font-weight:600; text-decoration:none; font-size:0.95rem; background:var(--card-bg); padding:6px 12px; border-radius:20px; box-shadow:var(--shadow-soft);">
+                    <i class="ri-user-settings-line"></i> Staff Login
+                </a>
+            </div>
+            <div class="entry-header">
+                <h2>Welcome</h2>
+                <p>Select your dining preference</p>
+            </div>
+            
+            <!-- Quick Status Banners -->
+            <div id="quick-status-container" style="margin: 0 20px 20px;"></div>
+
+            <div class="entry-options">
+                <div class="option-card" onclick="app.openQueueSheet()">
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80" alt="Queue">
+                    <h3>Join Live Queue</h3>
+                    <p class="text-muted">Get a virtual token</p>
+                </div>
+                <div class="option-card" onclick="app.openReserveSheet()">
+                    <img src="https://images.unsplash.com/photo-1414235077428-338988a2e8c0?w=400&q=80" alt="Reservation">
+                    <h3>Book a Table</h3>
+                    <p class="text-muted">Reserve in advance</p>
+                </div>
+                <div class="option-card" onclick="app.selectDining('Dine-In')">
+                    <img src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?w=400&q=80" alt="Order Food">
+                    <h3>Order Food Live</h3>
+                    <p class="text-muted">Smart self-service</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile View -->
+        <section id="profile-view" class="view with-bottom-nav">
+            <header class="header-simple glass">
+                <h2>My Profile</h2>
+                <button onclick="app.userLogout()" style="background:none; border:none; color:var(--orange); font-size:0.9rem; font-weight:600; cursor:pointer;">Logout</button>
+            </header>
+            
+            <div style="padding: 20px;">
+                <div class="cart-card text-center" style="margin-bottom: 20px;">
+                    <div style="width:70px; height:70px; background:var(--green-light); border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class="ri-user-smile-fill" style="font-size:2.5rem; color:var(--green-dark);"></i>
+                    </div>
+                    <h3 id="profile-phone">+91 XXXXX XXXXX</h3>
+                    <p class="text-muted text-sm">Smart Dining Member</p>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:20px; overflow-x:auto; padding-bottom:5px;">
+                    <button class="btn btn-primary btn-sm" id="p-tab-orders" onclick="app.switchProfileTab('orders')">Food Orders</button>
+                    <button class="btn btn-outline btn-sm" id="p-tab-res" onclick="app.switchProfileTab('res')">Reservations</button>
+                    <button class="btn btn-outline btn-sm" id="p-tab-queue" onclick="app.switchProfileTab('queue')">Queues</button>
+                </div>
+
+                <div id="profile-content" style="padding-bottom:80px;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Member Selection Bottom Sheet -->
+        <div id="member-sheet" class="bottom-sheet">
+            <div class="sheet-overlay" onclick="app.closeMemberSheet()"></div>
+            <div class="sheet-content glass">
+                <div class="sheet-handle"></div>
+                <h3>How many people?</h3>
+                <div class="member-selector mt-20">
+                    <button class="icon-btn" onclick="app.changeMembers(-1)"><i class="ri-subtract-line"></i></button>
+                    <span id="member-count" class="member-count-num">1</span>
+                    <button class="icon-btn" onclick="app.changeMembers(1)"><i class="ri-add-line"></i></button>
+                </div>
+                <button class="btn btn-primary btn-full mt-30" onclick="app.confirmEntry()">Continue</button>
+            </div>
+        </div>
+
+        <!-- 3. Home Screen -->
+        <section id="home-view" class="view with-bottom-nav">
+            <header class="home-header glass">
+                <div class="user-info">
+                    <p class="greeting">Vanakkam! 🙏</p>
+                    <h2>Authentic South Indian 🍃</h2>
+                </div>
+                <div class="search-bar mt-10">
+                    <i class="ri-search-line"></i>
+                    <input type="text" placeholder="Search Idli, Dosa, Meals..." oninput="app.filterMenu(this.value)">
+                </div>
+            </header>
+
+            <div class="home-content-scroll">
+                <!-- Categories -->
+                <div class="category-scroll" id="category-list">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Banner -->
+                <div class="special-banner mt-20">
+                    <div class="banner-text">
+                        <span class="badge">Today's Special</span>
+                        <h3>Ghee Roast Dosa</h3>
+                        <p>With 3 types of chutney</p>
+                        <button class="btn btn-sm btn-white mt-10" onclick="app.addToCart('m2')">Add +</button>
+                    </div>
+                </div>
+
+                <!-- Best Sellers -->
+                <div class="section-header mt-30">
+                    <h3>Our Menu</h3>
+                    <span class="veg-only-badge"><span class="veg-dot"></span> 100% Veg</span>
+                </div>
+                <div class="food-grid" id="food-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Banana Leaf Mode -->
+        <section id="leaf-view" class="view">
+            <header class="header-simple glass">
+                <button class="icon-btn-sm" onclick="app.closeLeafMode()"><i class="ri-arrow-left-line"></i></button>
+                <h2>Full Meals Setup</h2>
+                <div style="width: 32px"></div>
+            </header>
+
+            <div class="leaf-container">
+                <div class="leaf-bg">
+                    <!-- Food items will be placed absolutely here -->
+                    <div id="leaf-items-layer"></div>
+                    <div class="steam-container" id="steam-layer"></div>
+                </div>
+                
+                <div class="leaf-controls glass">
+                    <h3>Customize Your Meal</h3>
+                    <div class="extra-options mt-10" id="leaf-extras">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="leaf-footer mt-20">
+                        <div class="price-col">
+                            <span class="sm-text">Total</span>
+                            <strong class="lg-text" id="leaf-total">₹150</strong>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.addLeafMealToCart()">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Cart Screen -->
+        <section id="cart-view" class="view with-bottom-nav">
+            <header class="header-simple glass">
+                <h2>Your Cart</h2>
+            </header>
+            
+            <div class="cart-scroll" id="cart-content-area">
+                <div id="cart-items-container">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="cart-card mt-20">
+                    <div class="input-group">
+                        <i class="ri-coupon-line" style="color:var(--green-dark)"></i>
+                        <input type="text" placeholder="Apply Promo Code">
+                        <button class="text-btn">Apply</button>
+                    </div>
+                </div>
+                
+                <div class="cart-card mt-10">
+                    <div class="input-group">
+                        <i class="ri-edit-line text-muted"></i>
+                        <input type="text" id="special-instructions" placeholder="Any special cooking instructions?">
+                    </div>
+                </div>
+
+                <div class="cart-card mt-20 mb-30">
+                    <h3>Bill Details</h3>
+                    <div class="bill-row mt-10">
+                        <span class="text-muted">Item Total</span>
+                        <span id="bill-subtotal">₹0</span>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-muted">GST (5%)</span>
+                        <span id="bill-gst">₹0</span>
+                    </div>
+                    <div class="bill-row bill-total mt-10 pt-10" style="border-top:1px dashed var(--border)">
+                        <span>To Pay</span>
+                        <strong id="bill-total" style="color:var(--green-dark)">₹0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Checkout button shown conditionally -->
+            <div class="sticky-checkout glass" id="checkout-btn-container">
+                <button class="btn btn-primary btn-full" onclick="app.checkout()">
+                    <span id="checkout-amt">₹0</span>
+                    <span>Proceed to Pay <i class="ri-arrow-right-line"></i></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 6. Order Tracking -->
+        <section id="track-view" class="view with-bottom-nav">
+            <header class="header-simple glass">
+                <h2>Order #<span id="track-id">----</span></h2>
+            </header>
+            
+            <div class="track-content">
+                <div class="track-status-card text-center glass">
+                    <div class="pulse-ring">
+                        <i class="ri-restaurant-line lg-icon"></i>
+                    </div>
+                    <h2 class="mt-20" id="track-status-text">Waiting for order...</h2>
+                    <p class="text-muted mt-5">Sit back and relax</p>
+                </div>
+
+                <div class="timeline mt-30 glass p-20 radius-lg" id="track-timeline">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Queue Track View -->
+        <section id="queue-view" class="view">
+            <header class="header-simple glass">
+                <button class="icon-btn-sm" onclick="app.goBack()"><i class="ri-arrow-left-line"></i></button>
+                <h2>Live Queue</h2>
+                <div style="width:32px;"></div>
+            </header>
+            <div class="track-content">
+                <div class="cart-card text-center track-status-card" style="margin-top: 20px;">
+                    <div class="pulse-ring"><i class="ri-group-line lg-icon"></i></div>
+                    <h2 class="mt-20">Token: <span id="queue-token-id" style="color:var(--green-dark);">---</span></h2>
+                    <p class="text-muted mt-5" id="queue-status-text">You are in the queue</p>
+                    
+                    <div style="display:flex; justify-content:space-around; margin-top:30px;">
+                        <div>
+                            <h3 id="queue-ahead" style="font-size:2rem; color:var(--orange);">0</h3>
+                            <p class="text-muted text-sm">People Ahead</p>
+                        </div>
+                        <div>
+                            <h3 id="queue-time" style="font-size:2rem; color:var(--green-dark);">0m</h3>
+                            <p class="text-muted text-sm">Est. Wait</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reservation Track View -->
+        <section id="reserve-view" class="view">
+            <header class="header-simple glass">
+                <button class="icon-btn-sm" onclick="app.goBack()"><i class="ri-arrow-left-line"></i></button>
+                <h2>Reservation</h2>
+                <div style="width:32px;"></div>
+            </header>
+            <div class="track-content">
+                <div class="cart-card text-center" style="margin-top: 20px; padding:40px 20px;">
+                    <i class="ri-calendar-check-line" style="font-size:4rem; color:var(--green-dark);"></i>
+                    <h2 class="mt-20">Booking Confirmed!</h2>
+                    <p class="text-muted mt-5">Your table is reserved.</p>
+                    
+                    <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); margin-top:30px; text-align:left;">
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">ID:</strong> <span id="res-id">---</span></p>
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">Date:</strong> <span id="res-date">---</span></p>
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">Time:</strong> <span id="res-time">---</span></p>
+                        <p><strong style="color:var(--green-dark);">Guests:</strong> <span id="res-guests">---</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Queue Track View -->
+        <section id="queue-view" class="view">
+            <header class="header-simple glass">
+                <button class="icon-btn-sm" onclick="app.goBack()"><i class="ri-arrow-left-line"></i></button>
+                <h2>Live Queue</h2>
+                <div style="width:32px;"></div>
+            </header>
+            <div class="track-content">
+                <div class="cart-card text-center track-status-card" style="margin-top: 20px;">
+                    <div class="pulse-ring"><i class="ri-group-line lg-icon"></i></div>
+                    <h2 class="mt-20">Token: <span id="queue-token-id" style="color:var(--green-dark);">---</span></h2>
+                    <p class="text-muted mt-5" id="queue-status-text">You are in the queue</p>
+                    
+                    <div style="display:flex; justify-content:space-around; margin-top:30px;">
+                        <div>
+                            <h3 id="queue-ahead" style="font-size:2rem; color:var(--orange);">0</h3>
+                            <p class="text-muted text-sm">People Ahead</p>
+                        </div>
+                        <div>
+                            <h3 id="queue-time" style="font-size:2rem; color:var(--green-dark);">0m</h3>
+                            <p class="text-muted text-sm">Est. Wait</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reservation Track View -->
+        <section id="reserve-view" class="view">
+            <header class="header-simple glass">
+                <button class="icon-btn-sm" onclick="app.goBack()"><i class="ri-arrow-left-line"></i></button>
+                <h2>Reservation</h2>
+                <div style="width:32px;"></div>
+            </header>
+            <div class="track-content">
+                <div class="cart-card text-center" style="margin-top: 20px; padding:40px 20px;">
+                    <i class="ri-calendar-check-line" style="font-size:4rem; color:var(--green-dark);"></i>
+                    <h2 class="mt-20">Booking Confirmed!</h2>
+                    <p class="text-muted mt-5">Your table is reserved.</p>
+                    
+                    <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); margin-top:30px; text-align:left;">
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">ID:</strong> <span id="res-id">---</span></p>
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">Date:</strong> <span id="res-date">---</span></p>
+                        <p style="margin-bottom:10px;"><strong style="color:var(--green-dark);">Time:</strong> <span id="res-time">---</span></p>
+                        <p><strong style="color:var(--green-dark);">Guests:</strong> <span id="res-guests">---</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav glass" id="bottom-nav" style="display: none;">
+            <a href="#" class="nav-item" onclick="app.navTo('entry-view', this)">
+                <i class="ri-home-5-line"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item active" onclick="app.navTo('home-view', this)">
+                <i class="ri-restaurant-2-line"></i>
+                <span>Menu</span>
+            </a>
+            <a href="#" class="nav-item cart-nav" onclick="app.navTo('cart-view', this)">
+                <div class="cart-badge" id="nav-cart-badge">0</div>
+                <i class="ri-shopping-bag-3-line"></i>
+                <span>Cart</span>
+            </a>
+            <a href="#" class="nav-item" onclick="app.navTo('track-view', this)">
+                <i class="ri-file-list-3-line"></i>
+                <span>Orders</span>
+            </a>
+            <a href="#" class="nav-item" onclick="app.navTo('profile-view', this)">
+                <i class="ri-user-smile-line"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Queue Sheet -->
+    <div id="queue-sheet" class="bottom-sheet">
+        <div class="sheet-overlay" onclick="app.closeQueueSheet()"></div>
+        <div class="sheet-content glass">
+            <div class="sheet-handle"></div>
+            <h3 class="text-center mb-20">Join Queue</h3>
+            <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
+                <input type="text" id="q-name" placeholder="Your Name" style="padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-family:'Outfit';">
+                <input type="tel" id="q-phone" placeholder="Phone Number" style="padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-family:'Outfit';">
+                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card-bg); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                    <span>Guests</span>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <button class="icon-btn-sm" onclick="app.updateQGuests(-1)"><i class="ri-subtract-line"></i></button>
+                        <span id="q-guests-count" style="font-weight:600;">2</span>
+                        <button class="icon-btn-sm" onclick="app.updateQGuests(1)"><i class="ri-add-line"></i></button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="app.joinQueue()">Get Token</button>
+        </div>
+    </div>
+
+    <!-- Reservation Sheet -->
+    <div id="reserve-sheet" class="bottom-sheet">
+        <div class="sheet-overlay" onclick="app.closeReserveSheet()"></div>
+        <div class="sheet-content glass">
+            <div class="sheet-handle"></div>
+            <h3 class="text-center mb-20">Book Table</h3>
+            <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
+                <input type="text" id="r-name" placeholder="Your Name" style="padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-family:'Outfit';">
+                <input type="date" id="r-date" style="padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-family:'Outfit';">
+                <input type="time" id="r-time" style="padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-family:'Outfit';">
+                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card-bg); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                    <span>Guests</span>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <button class="icon-btn-sm" onclick="app.updateRGuests(-1)"><i class="ri-subtract-line"></i></button>
+                        <span id="r-guests-count" style="font-weight:600;">2</span>
+                        <button class="icon-btn-sm" onclick="app.updateRGuests(1)"><i class="ri-add-line"></i></button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="app.bookTable()">Confirm Booking</button>
+        </div>
+    </div>
+
+    <!-- Payment Overlay -->
+    <div id="payment-overlay" class="bottom-sheet">
+        <div class="sheet-overlay" onclick="app.closePayment()"></div>
+        <div class="sheet-content glass">
+            <div class="sheet-handle"></div>
+            <h3 class="text-center">Select Payment Method</h3>
+            <p class="text-center text-muted mb-20 mt-5">Choose how you want to pay</p>
+            
+            <div style="display:flex; flex-direction:column; gap:16px; margin-bottom: 20px;">
+                <button class="btn btn-primary btn-full" onclick="app.payWithRazorpay()">
+                    <i class="ri-bank-card-line"></i> Pay Online (Cards / UPI)
+                </button>
+                <button class="btn btn-outline btn-full" onclick="app.completePayment('Cash')">
+                    <i class="ri-money-rupee-circle-line"></i> Pay with Cash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

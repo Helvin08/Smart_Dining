@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Staff Dashboard - Smart Dining</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="desktop-warning">
+        <h2>Mobile Only</h2>
+        <p>The Staff Dashboard is designed for mobile devices. Please open on your smartphone or tablet.</p>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header-simple glass">
+            <h2>Staff Dashboard</h2>
+            <a href="index.html" style="color:var(--green-dark); text-decoration:none; font-weight:600; font-size:0.9rem;">Customer App</a>
+        </header>
+
+        <!-- Login Screen -->
+        <section id="login-view" class="view active" style="display:flex; flex-direction:column; justify-content:center; padding: 20px; text-align:center;">
+            <i class="ri-lock-2-line" style="font-size: 4rem; color: var(--green-dark); margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom:10px;">Staff Login</h2>
+            <p class="text-muted" style="margin-bottom:30px;">Enter PIN to access live orders</p>
+            
+            <div class="input-group" style="background:var(--card-bg); padding:10px; border-radius:var(--radius-md); box-shadow:var(--shadow-soft); margin-bottom: 20px;">
+                <input type="password" id="staff-pin" placeholder="Enter PIN (1234)" style="text-align:center; letter-spacing:8px; font-size:1.5rem; width:100%;">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="adminApp.login()">Login</button>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="admin-view" class="view" style="padding: 20px; padding-bottom: 50px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color: var(--green-dark);">Staff Panel</h2>
+                <span class="badge" style="margin:0; background:var(--green-light);">Live Sync</span>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:20px; overflow-x:auto; padding-bottom:10px;">
+                <button class="btn btn-primary btn-sm" id="tab-orders" onclick="adminApp.switchTab('orders')">Food Orders</button>
+                <button class="btn btn-outline btn-sm" id="tab-queue" onclick="adminApp.switchTab('queue')">Queue</button>
+                <button class="btn btn-outline btn-sm" id="tab-reserve" onclick="adminApp.switchTab('reserve')">Reservations</button>
+            </div>
+
+            <div id="admin-content">
+                <!-- Content will be rendered here based on active tab -->
+            </div>
+
+            <button class="btn btn-outline btn-full mt-30" onclick="adminApp.logout()">Logout</button>
+        </section>
+    </div>
+
+    <script>
+        const adminApp = {
+            activeTab: 'orders',
+            
+            login() {
+                const pin = document.getElementById('staff-pin').value;
+                if(pin === '1234') { 
+                    document.getElementById('login-view').classList.remove('active');
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('admin-view').classList.add('active');
+                    this.renderCurrentTab();
+                    setInterval(() => this.renderCurrentTab(), 3000);
+                } else {
+                    alert('Invalid PIN. Please try again.');
+                }
+            },
+
+            logout() {
+                document.getElementById('staff-pin').value = '';
+                document.getElementById('login-view').classList.add('active');
+                document.getElementById('login-view').style.display = 'flex';
+                document.getElementById('admin-view').classList.remove('active');
+            },
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                document.getElementById('tab-orders').className = tab === 'orders' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+                document.getElementById('tab-queue').className = tab === 'queue' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+                document.getElementById('tab-reserve').className = tab === 'reserve' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+                this.renderCurrentTab();
+            },
+
+            renderCurrentTab() {
+                if(this.activeTab === 'orders') this.renderOrders();
+                else if(this.activeTab === 'queue') this.renderQueue();
+                else if(this.activeTab === 'reserve') this.renderReservations();
+            },
+
+            renderOrders() {
+                const container = document.getElementById('admin-content');
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]').reverse();
+                
+                if(orders.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted" style="padding: 40px 0;">No active food orders</p>';
+                    return;
+                }
+
+                container.innerHTML = orders.map(o => `
+                    <div class="cart-card" style="border-left: 4px solid var(--green-dark);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
+                            <strong style="font-size:1.1rem; color:var(--text-dark);">${o.type} • ${o.members} Pax</strong>
+                            <span class="badge" style="margin:0;">${o.status}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
+                            ID: ${o.id} • ${o.time} <br>
+                            Method: ${o.method} • <strong style="color:var(--text-dark)">₹${o.total}</strong>
+                        </div>
+                        <div style="background:var(--bg-main); padding:12px; border-radius:var(--radius-sm); font-size:0.9rem; line-height:1.6; margin-bottom:12px; font-weight:500;">
+                            ${o.items.join('<br>')}
+                        </div>
+                        ${o.status !== 'Served' ? `
+                        <div style="display:flex; gap:10px;">
+                            ${o.status === 'Pending' ? `<button class="btn btn-outline btn-sm btn-full" style="border-color:var(--orange); color:var(--orange);" onclick="adminApp.updateStatus('${o.id}', 'Sent to Kitchen')">Send to Kitchen</button>`:''}
+                            ${o.status === 'Sent to Kitchen' ? `<button class="btn btn-outline btn-sm btn-full" onclick="adminApp.updateStatus('${o.id}', 'Cooking')">Start Cooking</button>`:''}
+                            ${o.status === 'Cooking' ? `<button class="btn btn-primary btn-sm btn-full" onclick="adminApp.updateStatus('${o.id}', 'Ready')">Mark Ready</button>`:''}
+                            ${o.status === 'Ready' ? `<button class="btn btn-primary btn-sm btn-full" style="background:#388E3C" onclick="adminApp.updateStatus('${o.id}', 'Served')">Served</button>`:''}
+                        </div>
+                        `:''}
+                    </div>
+                `).join('');
+            },
+
+            updateStatus(id, status) {
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const idx = orders.findIndex(o => o.id === id);
+                if(idx > -1) {
+                    orders[idx].status = status;
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    this.renderCurrentTab();
+                }
+            },
+
+            renderQueue() {
+                const container = document.getElementById('admin-content');
+                const queues = JSON.parse(localStorage.getItem('queues') || '[]');
+                
+                const activeQs = queues.filter(q => q.status === 'Waiting');
+                if(activeQs.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted" style="padding: 40px 0;">No one is in the queue</p>';
+                    return;
+                }
+
+                container.innerHTML = activeQs.map((q, idx) => `
+                    <div class="cart-card" style="border-left: 4px solid var(--orange);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
+                            <strong style="font-size:1.1rem; color:var(--text-dark);">${q.token}</strong>
+                            <span class="badge" style="margin:0; background:var(--orange);">Pos: ${idx}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
+                            Name: ${q.name} <br>
+                            Phone: ${q.phone} <br>
+                            Guests: <strong>${q.guests}</strong>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="adminApp.callQueue('${q.token}')">Table Ready (Call In)</button>
+                    </div>
+                `).join('');
+            },
+
+            callQueue(token) {
+                const queues = JSON.parse(localStorage.getItem('queues') || '[]');
+                const idx = queues.findIndex(q => q.token === token);
+                if(idx > -1) {
+                    queues[idx].status = 'Called';
+                    localStorage.setItem('queues', JSON.stringify(queues));
+                    this.renderCurrentTab();
+                }
+            },
+
+            renderReservations() {
+                const container = document.getElementById('admin-content');
+                const resList = JSON.parse(localStorage.getItem('reservations') || '[]').reverse();
+                
+                if(resList.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted" style="padding: 40px 0;">No reservations</p>';
+                    return;
+                }
+
+                container.innerHTML = resList.map(r => `
+                    <div class="cart-card" style="border-left: 4px solid var(--green-dark);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
+                            <strong style="font-size:1.1rem; color:var(--text-dark);">${r.date} at ${r.time}</strong>
+                            <span class="badge" style="margin:0;">${r.status}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
+                            ID: ${r.id} <br>
+                            Name: ${r.name} <br>
+                            Guests: <strong>${r.guests}</strong>
+                        </div>
+                        ${r.status === 'Confirmed' ? `
+                        <button class="btn btn-outline btn-sm btn-full" onclick="adminApp.completeReservation('${r.id}')">Mark as Completed</button>
+                        ` : ''}
+                    </div>
+                `).join('');
+            },
+
+            completeReservation(id) {
+                const resList = JSON.parse(localStorage.getItem('reservations') || '[]');
+                const idx = resList.findIndex(r => r.id === id);
+                if(idx > -1) {
+                    resList[idx].status = 'Completed';
+                    localStorage.setItem('reservations', JSON.stringify(resList));
+                    this.renderCurrentTab();
+                }
+            }
+        };
+    </script>
+</body>
+</html>
