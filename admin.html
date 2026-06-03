@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Staff Dashboard - Smart Dining</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF6200'><path d='M21 3v2c0 9.627-5.373 14-12 14H7.098c.212-3.012 1.15-5.835 3.598-8.284 2.45-2.45 5.272-3.387 8.284-3.6V3h2zM5.5 19h-2v2h2v-2z'/></svg>">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
     <div class="desktop-warning">
-        <h2>Mobile Only</h2>
-        <p>The Staff Dashboard is designed for mobile devices. Please open on your smartphone or tablet.</p>
+         <h2>Mobile & Tablet Only</h2>
+        <p>This premium dining experience is designed exclusively for mobile and tablet devices. Please open on your smartphone or tablet.</p>
     </div>
 
     <div class="app-container">
@@ -54,9 +55,13 @@
         </section>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const adminApp = {
             activeTab: 'orders',
+            socket: null,
+            state: { orders: [], queues: [], reservations: [] },
+            intervalId: null,
             
             login() {
                 const pin = document.getElementById('staff-pin').value;
@@ -64,8 +69,29 @@
                     document.getElementById('login-view').classList.remove('active');
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('admin-view').classList.add('active');
+                    
+                    if(typeof io !== 'undefined') {
+                        const socketUrl = (window.location.protocol === 'file:') 
+                            ? 'http://localhost:3000' 
+                            : (window.location.port !== '3000' 
+                                ? `${window.location.protocol}//${window.location.hostname}:3000` 
+                                : undefined);
+                        this.socket = io(socketUrl);
+                        this.socket.on('state_update', (data) => {
+                            this.state[data.type] = data.data;
+                            this.renderCurrentTab();
+                        });
+                        this.socket.on('initial_state', (state) => {
+                            this.state = state;
+                            this.renderCurrentTab();
+                        });
+                        this.socket.on('error_message', (msg) => {
+                            alert(msg);
+                        });
+                    } else {
+                        this.intervalId = setInterval(() => this.renderCurrentTab(), 3000);
+                    }
                     this.renderCurrentTab();
-                    setInterval(() => this.renderCurrentTab(), 3000);
                 } else {
                     alert('Invalid PIN. Please try again.');
                 }
@@ -76,6 +102,11 @@
                 document.getElementById('login-view').classList.add('active');
                 document.getElementById('login-view').style.display = 'flex';
                 document.getElementById('admin-view').classList.remove('active');
+                if(this.intervalId) clearInterval(this.intervalId);
+                if(this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
             },
 
             switchTab(tab) {
@@ -94,14 +125,17 @@
 
             renderOrders() {
                 const container = document.getElementById('admin-content');
-                const orders = JSON.parse(localStorage.getItem('orders') || '[]').reverse();
+                let orders = this.state.orders;
+                if(!this.socket) orders = JSON.parse(localStorage.getItem('orders') || '[]');
                 
-                if(orders.length === 0) {
+                const displayOrders = [...orders].reverse();
+                
+                if(displayOrders.length === 0) {
                     container.innerHTML = '<p class="text-center text-muted" style="padding: 40px 0;">No active food orders</p>';
                     return;
                 }
 
-                container.innerHTML = orders.map(o => `
+                container.innerHTML = displayOrders.map(o => `
                     <div class="cart-card" style="border-left: 4px solid var(--green-dark);">
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
                             <strong style="font-size:1.1rem; color:var(--text-dark);">${o.type} • ${o.members} Pax</strong>
@@ -110,9 +144,11 @@
                         <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
                             ID: ${o.id} • ${o.time} <br>
                             Method: ${o.method} • <strong style="color:var(--text-dark)">₹${o.total}</strong>
+                            ${o.table_number ? `<br><span class="badge bg-success" style="margin:6px 0 0 0;">Table: ${o.table_number}</span>` : ''}
+                            ${o.queue_token ? `<br><span class="badge bg-warning" style="margin:6px 0 0 0;">Token: ${o.queue_token}</span>` : ''}
                         </div>
                         <div style="background:var(--bg-main); padding:12px; border-radius:var(--radius-sm); font-size:0.9rem; line-height:1.6; margin-bottom:12px; font-weight:500;">
-                            ${o.items.join('<br>')}
+                            ${Array.isArray(o.items) ? o.items.join('<br>') : o.items}
                         </div>
                         ${o.status !== 'Served' ? `
                         <div style="display:flex; gap:10px;">
@@ -127,18 +163,23 @@
             },
 
             updateStatus(id, status) {
-                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-                const idx = orders.findIndex(o => o.id === id);
-                if(idx > -1) {
-                    orders[idx].status = status;
-                    localStorage.setItem('orders', JSON.stringify(orders));
-                    this.renderCurrentTab();
+                if(this.socket) {
+                    this.socket.emit('update_order_status', { id, status });
+                } else {
+                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                    const idx = orders.findIndex(o => o.id === id);
+                    if(idx > -1) {
+                        orders[idx].status = status;
+                        localStorage.setItem('orders', JSON.stringify(orders));
+                        this.renderCurrentTab();
+                    }
                 }
             },
 
             renderQueue() {
                 const container = document.getElementById('admin-content');
-                const queues = JSON.parse(localStorage.getItem('queues') || '[]');
+                let queues = this.state.queues;
+                if(!this.socket) queues = JSON.parse(localStorage.getItem('queues') || '[]');
                 
                 const activeQs = queues.filter(q => q.status === 'Waiting');
                 if(activeQs.length === 0) {
@@ -146,66 +187,106 @@
                     return;
                 }
 
-                container.innerHTML = activeQs.map((q, idx) => `
+                container.innerHTML = activeQs.map((q, idx) => {
+                    const peopleAhead = idx;
+                    const estWait = peopleAhead * 5;
+                    return `
                     <div class="cart-card" style="border-left: 4px solid var(--orange);">
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
                             <strong style="font-size:1.1rem; color:var(--text-dark);">${q.token}</strong>
-                            <span class="badge" style="margin:0; background:var(--orange);">Pos: ${idx}</span>
+                            <span class="badge" style="margin:0; background:var(--orange);">Pos: #${idx + 1}</span>
                         </div>
                         <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
                             Name: ${q.name} <br>
                             Phone: ${q.phone} <br>
-                            Guests: <strong>${q.guests}</strong>
+                            Guests: <strong>${q.guests}</strong> <br>
+                            People Ahead: <strong>${peopleAhead}</strong> • Est. Wait: <strong>${estWait} mins</strong>
                         </div>
                         <button class="btn btn-primary btn-sm btn-full" onclick="adminApp.callQueue('${q.token}')">Table Ready (Call In)</button>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             },
 
             callQueue(token) {
-                const queues = JSON.parse(localStorage.getItem('queues') || '[]');
-                const idx = queues.findIndex(q => q.token === token);
-                if(idx > -1) {
-                    queues[idx].status = 'Called';
-                    localStorage.setItem('queues', JSON.stringify(queues));
-                    this.renderCurrentTab();
+                if(this.socket) {
+                    this.socket.emit('call_queue', token);
+                } else {
+                    const queues = JSON.parse(localStorage.getItem('queues') || '[]');
+                    const idx = queues.findIndex(q => q.token === token);
+                    if(idx > -1) {
+                        queues[idx].status = 'Called';
+                        localStorage.setItem('queues', JSON.stringify(queues));
+                        this.renderCurrentTab();
+                    }
                 }
             },
 
             renderReservations() {
                 const container = document.getElementById('admin-content');
-                const resList = JSON.parse(localStorage.getItem('reservations') || '[]').reverse();
+                let resList = this.state.reservations;
+                if(!this.socket) resList = JSON.parse(localStorage.getItem('reservations') || '[]');
                 
-                if(resList.length === 0) {
+                const displayRes = [...resList].reverse();
+                
+                if(displayRes.length === 0) {
                     container.innerHTML = '<p class="text-center text-muted" style="padding: 40px 0;">No reservations</p>';
                     return;
                 }
 
-                container.innerHTML = resList.map(r => `
-                    <div class="cart-card" style="border-left: 4px solid var(--green-dark);">
+                container.innerHTML = displayRes.map(r => {
+                    const borderStyle = r.status === 'Waitlist' ? 'border-left: 4px solid var(--orange)' : 'border-left: 4px solid var(--green-dark)';
+                    const badgeClass = r.status === 'Waitlist' ? 'badge bg-warning' : (r.status === 'Confirmed' ? 'badge bg-success' : 'badge');
+                    
+                    return `
+                    <div class="cart-card" style="${borderStyle};">
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
                             <strong style="font-size:1.1rem; color:var(--text-dark);">${r.date} at ${r.time}</strong>
-                            <span class="badge" style="margin:0;">${r.status}</span>
+                            <span class="${badgeClass}" style="margin:0;">${r.status}</span>
                         </div>
                         <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">
-                            ID: ${r.id} <br>
+                            ID: ${r.id} • Table: <strong>${r.table_number || 'N/A'}</strong> <br>
                             Name: ${r.name} <br>
                             Guests: <strong>${r.guests}</strong>
                         </div>
-                        ${r.status === 'Confirmed' ? `
-                        <button class="btn btn-outline btn-sm btn-full" onclick="adminApp.completeReservation('${r.id}')">Mark as Completed</button>
-                        ` : ''}
+                        <div style="display:flex; gap:10px;">
+                            ${r.status === 'Waitlist' ? `
+                            <button class="btn btn-primary btn-sm btn-full" onclick="adminApp.confirmReservation('${r.id}')">Confirm Reservation</button>
+                            ` : ''}
+                            ${r.status === 'Confirmed' ? `
+                            <button class="btn btn-outline btn-sm btn-full" onclick="adminApp.completeReservation('${r.id}')">Mark as Completed</button>
+                            ` : ''}
+                        </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             },
 
             completeReservation(id) {
-                const resList = JSON.parse(localStorage.getItem('reservations') || '[]');
-                const idx = resList.findIndex(r => r.id === id);
-                if(idx > -1) {
-                    resList[idx].status = 'Completed';
-                    localStorage.setItem('reservations', JSON.stringify(resList));
-                    this.renderCurrentTab();
+                if(this.socket) {
+                    this.socket.emit('complete_reservation', id);
+                } else {
+                    const resList = JSON.parse(localStorage.getItem('reservations') || '[]');
+                    const idx = resList.findIndex(r => r.id === id);
+                    if(idx > -1) {
+                        resList[idx].status = 'Completed';
+                        localStorage.setItem('reservations', JSON.stringify(resList));
+                        this.renderCurrentTab();
+                    }
+                }
+            },
+
+            confirmReservation(id) {
+                if(this.socket) {
+                    this.socket.emit('confirm_reservation', id);
+                } else {
+                    const resList = JSON.parse(localStorage.getItem('reservations') || '[]');
+                    const idx = resList.findIndex(r => r.id === id);
+                    if(idx > -1) {
+                        resList[idx].status = 'Confirmed';
+                        localStorage.setItem('reservations', JSON.stringify(resList));
+                        this.renderCurrentTab();
+                    }
                 }
             }
         };

@@ -1,0 +1,43 @@
+{
+  "name": "final-year-project",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000F\u0000i\u0000n\u0000a\u0000l\u0000-\u0000Y\u0000e\u0000a\u0000r\u0000-\u0000P\u0000r\u0000o\u0000j\u0000e\u0000c\u0000t\u0000\r\u0000 \u0000",
+  "main": "script.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js",
+    "db:sync": "node sync-to-supabase.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Helvin08/Final-Year-Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Helvin08/Final-Year-Project/issues"
+  },
+  "homepage": "https://github.com/Helvin08/Final-Year-Project#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "@vitejs/plugin-react": "^6.0.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "framer-motion": "^12.38.0",
+    "razorpay": "^2.9.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "socket.io": "^4.8.3",
+    "vite": "^8.0.12"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^3.4.17"
+  }
+}
