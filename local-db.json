@@ -162,6 +162,63 @@
       "order_time": "21:01",
       "queue_token": "Q-218",
       "table_number": null
+    },
+    {
+      "id": "ORD-3915",
+      "type": "Table Dine-In",
+      "members": 1,
+      "items": [
+        "1x Mallipoo Idli"
+      ],
+      "total": 103,
+      "method": "Cash (Code: 1234)",
+      "status": "Ready",
+      "order_time": "09:01",
+      "queue_token": null,
+      "table_number": 6
+    },
+    {
+      "id": "ORD-3278",
+      "type": "Table Dine-In",
+      "members": 1,
+      "items": [
+        "1x Mallipoo Idli"
+      ],
+      "total": 103,
+      "method": "Cash (Code: 1234)",
+      "status": "Served",
+      "order_time": "11:39",
+      "queue_token": null,
+      "table_number": 5
+    },
+    {
+      "id": "ORD-9288",
+      "type": "Takeaway",
+      "members": 1,
+      "items": [
+        "1x Mallipoo Idli"
+      ],
+      "total": 103,
+      "method": "Cash (Code: 1234)",
+      "status": "Sent to Kitchen",
+      "order_time": "12:36",
+      "queue_token": "Q-490",
+      "table_number": null
+    },
+    {
+      "id": "ORD-6711",
+      "type": "Table Dine-In",
+      "members": 1,
+      "items": [
+        "1x Mallipoo Idli",
+        "1x Masala Poori"
+      ],
+      "total": 265,
+      "method": "Cash (Code: 1234)",
+      "status": "Pending",
+      "order_time": "12:39",
+      "queue_token": null,
+      "table_number": 6
     }
   ],
   "queues": [
@@ -213,6 +270,13 @@
       "phone": "6383588709",
       "guests": 1,
       "status": "Called"
+    },
+    {
+      "token": "Q-490",
+      "name": "Guest",
+      "phone": "6383588709",
+      "guests": 1,
+      "status": "Waiting"
     }
   ],
   "reservations": [
@@ -313,6 +377,33 @@
       "guests": 2,
       "status": "Confirmed",
       "table_number": 1
+    },
+    {
+      "id": "RES-6956",
+      "name": "Sahaya Helvin S",
+      "booking_date": "2026-06-09",
+      "booking_time": "07:00 PM",
+      "guests": 8,
+      "status": "Confirmed",
+      "table_number": 6
+    },
+    {
+      "id": "RES-8145",
+      "name": "Charles Benny",
+      "booking_date": "2026-06-09",
+      "booking_time": "07:00 PM",
+      "guests": 5,
+      "status": "Confirmed",
+      "table_number": 5
+    },
+    {
+      "id": "RES-1743",
+      "name": "Charles Benny",
+      "booking_date": "2026-06-09",
+      "booking_time": "07:00 PM",
+      "guests": 7,
+      "status": "Confirmed",
+      "table_number": 6
     }
   ]
 }
